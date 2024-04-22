@@ -2,7 +2,7 @@
     "name": "okanban",
     "version": "1.0.0",
     "description": "## Description du projet",
-    "main": ".eslintrc.js",
+    "main": "index.js",
     "type": "module",
     "scripts": {
         "start": "node index.js",

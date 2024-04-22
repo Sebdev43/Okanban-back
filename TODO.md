@@ -8,7 +8,8 @@
   - Ecriture courte : `psql -U okanban < data/create_tables.sql`
   - Option en étant connecté ç la BDD : `\i data/create_table.sql`
 - [x] faire un seeding (insert de données de test)
-- [ ] faire les models sequelize
-- [ ] tester les models
+- [x] faire les models sequelize
+- [x] tester les models
 
 - [ ] penser au challenge
+- [ ] vérifier parcours S08
