@@ -1,11 +1,16 @@
+import 'dotenv/config';
 import express from 'express';
-
 const app = express();
 
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
+import { router } from './src/routers/index.js';
 
-app.listen(3000, () => {
-    console.log('Example app listening on port http://localhost:3000!');
+// * ce middleware sert à interpréter du json que l'on reçoit par req.body
+app.use(express.json());
+
+app.use(router);
+
+app.listen(process.env.PORT, () => {
+    console.log(
+        `Example app listening on port ${process.env.BASE_URL}:${process.env.PORT}`
+    );
 });
