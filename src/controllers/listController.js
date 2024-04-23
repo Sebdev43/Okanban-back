@@ -19,7 +19,24 @@ const listController = {
         res.json(lists);
     },
 
-    show(req, res) {},
+    async show(req, res) {
+        // TODO La validation devrait être faite dans un middleware
+        // * avec parseInt, on obtient un integer ou NaN
+        const listId = Number.parseInt(req.params.id, 10);
+
+        if (!Number.isInteger(listId)) {
+            return res.status(404).json({ message: 'Not found' });
+        }
+
+        const list = await List.findByPk(listId, {
+            include: {
+                association: 'cards',
+                include: 'tags',
+            },
+        });
+
+        res.json(list);
+    },
 
     store(req, res) {},
     update(req, res) {},
