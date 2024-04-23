@@ -14,10 +14,10 @@ DELETE : sert à effacer des données
 
 ## Les 7 méthodes REST
 
-- index : sert à obtenir une liste de ressources : GET : Model.findAll
-- show : on obtient le détail d'une ressource : GET Model.findByPk
-- create : on afficher un formulaire pour créer une ressource : GET
-- store : on persiste la ressource en BDD : POST ou PUT Model.create
-- edit : on affiche le forlulaire pour mettre à jour une donnée : GET Model.findByPk
-- update : on persiste la mise à jour : PUT ou PATCH Model.update
-- destroy : on efface une donnée : DELETE Model.destroy
+- `index` : sert à obtenir une liste de ressources : GET : Model.findAll
+- `show` : on obtient le détail d'une ressource : GET Model.findByPk
+- `create` : on afficher un formulaire pour créer une ressource : GET
+- `store` : on persiste la ressource en BDD : POST ou PUT Model.create
+- `edit` : on affiche le forlulaire pour mettre à jour une donnée : GET Model.findByPk
+- `update` : on persiste la mise à jour : PUT ou PATCH Model.update
+- `destroy` : on efface une donnée : DELETE Model.destroy
