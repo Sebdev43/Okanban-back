@@ -15,7 +15,6 @@ CREATE TABLE "card" (
     "content" TEXT NOT NULL,
     "position" INTEGER DEFAULT 1,
     "color" TEXT,
-    -- ON DELETE CASCADE signifie que auqnd on efface une liste, toutes les cartes associées seront effacées aussi
     "list_id" INTEGER NOT NULL REFERENCES "list"("id") ON DELETE CASCADE,
     "created_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMPTZ

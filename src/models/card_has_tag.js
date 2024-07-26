@@ -1,6 +1,12 @@
 import { Model, DataTypes } from 'sequelize';
 import { getConnexion } from './sequelizeClient.js';
 
+/**
+ * CardHasTag model definition.
+ * 
+ * @extends Model
+ */
+
 class CardHasTag extends Model {}
 
 CardHasTag.init(
@@ -16,7 +22,7 @@ CardHasTag.init(
         },
     },
     {
-        // * exécution de notre fonction qui retourne une instance de sequelize pour dire au modèle comment se connceter
+
         sequelize: getConnexion(),
         tableName: 'card_has_tag',
     }

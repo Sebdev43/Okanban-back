@@ -1,6 +1,12 @@
 import { Model, DataTypes } from 'sequelize';
 import { getConnexion } from './sequelizeClient.js';
 
+/**
+ * Card model definition.
+ * 
+ * @extends Model
+ */
+
 class Card extends Model {}
 
 Card.init(
@@ -25,7 +31,7 @@ Card.init(
         },
     },
     {
-        // * exécution de notre fonction qui retourne une instance de sequelize pour dire au modèle comment se connceter
+
         sequelize: getConnexion(),
         tableName: 'card',
     }

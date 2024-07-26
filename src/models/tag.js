@@ -1,6 +1,12 @@
 import { Model, DataTypes } from 'sequelize';
 import { getConnexion } from './sequelizeClient.js';
 
+/**
+ * Tag model definition.
+ * 
+ * @extends Model
+ */
+
 class Tag extends Model {}
 
 Tag.init(
@@ -18,7 +24,6 @@ Tag.init(
         },
     },
     {
-        // * exécution de notre fonction qui retourne une instance de sequelize pour dire au modèle comment se connceter
         sequelize: getConnexion(),
         tableName: 'tag',
     }

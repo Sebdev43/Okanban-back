@@ -1,12 +1,20 @@
 import { Card, Tag } from '../models/index.js';
 
+/**
+ * Card controller.
+ */
 const cardController = {
+    /**
+     * Fetches all cards from a specific list.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async indexFromList(req, res) {
         const listId = Number.parseInt(req.params.id, 10);
         if (!Number.isInteger(listId)) {
             return res.status(404).json({ message: 'Liste non trouvée' });
         }
-
         Card.findAll({
             where: { listId },
             include: 'tags'
@@ -18,12 +26,17 @@ const cardController = {
         });
     },
 
+    /**
+     * Fetches a specific card by ID.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async show(req, res) {
         const cardId = Number.parseInt(req.params.id, 10);
         if (!Number.isInteger(cardId)) {
             return res.status(404).json({ message: 'Carte non trouvée' });
         }
-
         Card.findByPk(cardId, {
             include: 'tags'
         }).then(card => {
@@ -38,12 +51,17 @@ const cardController = {
         });
     },
 
+    /**
+     * Creates a new card.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async store(req, res) {
         const { content, listId, position, color } = req.body;
         if (!content || typeof content !== 'string' || !Number.isInteger(listId)) {
             return res.status(400).json({ error: 'Données invalides' });
         }
-
         Card.create({ content, listId, position, color }).then(newCard => {
             res.status(201).json(newCard);
         }).catch(error => {
@@ -52,17 +70,21 @@ const cardController = {
         });
     },
 
+    /**
+     * Updates an existing card.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async update(req, res) {
         const cardId = Number.parseInt(req.params.id, 10);
         if (!Number.isInteger(cardId)) {
             return res.status(404).json({ message: 'Carte non trouvée' });
         }
-
         Card.findByPk(cardId).then(cardToUpdate => {
             if (!cardToUpdate) {
                 return res.status(404).json({ message: 'Carte non trouvée' });
             }
-
             const { content, position, color } = req.body;
             return cardToUpdate.update({ content, position, color });
         }).then(updatedCard => {
@@ -73,12 +95,17 @@ const cardController = {
         });
     },
 
+    /**
+     * Deletes a card.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async destroy(req, res) {
         const cardId = Number.parseInt(req.params.id, 10);
         if (!Number.isInteger(cardId)) {
             return res.status(404).json({ message: 'Carte non trouvée' });
         }
-
         Card.findByPk(cardId).then(cardToDelete => {
             if (!cardToDelete) {
                 return res.status(404).json({ message: 'Carte non trouvée' });
@@ -91,6 +118,13 @@ const cardController = {
             res.status(500).json({ error: 'Erreur lors de la suppression de la carte' });
         });
     },
+
+    /**
+     * Associates a tag with a card.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async showTagWithCard(req, res) {
         const { id, tag_id } = req.params;
         try {
@@ -109,6 +143,13 @@ const cardController = {
             res.status(500).json({ error: 'Erreur serveur' });
         }
     },
+
+    /**
+     * Removes an association between a tag and a card.
+     * 
+     * @param {Object} req - Express request object.
+     * @param {Object} res - Express response object.
+     */
     async destroyTagFromCard(req, res) {
         const { card_id, tag_id } = req.params;
         try {
@@ -128,7 +169,5 @@ const cardController = {
         }
     },
 };
-
-
 
 export { cardController };

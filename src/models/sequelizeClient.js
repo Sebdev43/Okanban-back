@@ -1,5 +1,11 @@
 import { Sequelize } from 'sequelize';
 
+/**
+ * Get a new Sequelize connection instance.
+ * 
+ * @returns {Sequelize} A Sequelize connection instance.
+ */
+
 function getConnexion() {
     return new Sequelize(process.env.PG_URL, {
         define: {
@@ -12,14 +18,6 @@ function getConnexion() {
     });
 }
 
-// export const sequelize =  new Sequelize(process.env.PG_URL, {
-//     define: {
-//         createdAt: 'created_at',
-//         updatedAt: 'updated_at',
-//         underscored: true,
-//     },
 
-//     logging: false,
-// });
 
 export { getConnexion };
