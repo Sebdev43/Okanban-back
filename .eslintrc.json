@@ -1,22 +1,23 @@
 {
     "env": {
-        "browser": true,
-        "es6": true,
+        "commonjs": true,
+        "es2021": true,
         "node": true,
         "type": "module"
     },
-    "parserOptions": {
-        "ecmaVersion": 2022
-    },
     "extends": "eslint:recommended",
+    "overrides": [
+        {
+            "files": "*.json",
+            "parser": "jsonc-eslint-parser",
+            "rules": {}
+        }
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest"
+    },
     "rules": {
-        "indent": [
-            "error",
-            4
-        ],
-        "semi": [
-            "error",
-            "always"
-        ]
+        "import/extensions": "off",
+        "import/named": "off"
     }
 }
