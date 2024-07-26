@@ -1,71 +1,134 @@
-import { Card } from '../models/index.js';
+import { Card, Tag } from '../models/index.js';
 
 const cardController = {
+    async indexFromList(req, res) {
+        const listId = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(listId)) {
+            return res.status(404).json({ message: 'Liste non trouvée' });
+        }
 
-    async getAll(req, res) {
-        try {
-            const cards = await Card.findAll();
-            res.status(200).json(cards);
-        } catch (err) {
+        Card.findAll({
+            where: { listId },
+            include: 'tags'
+        }).then(cards => {
+            res.json(cards);
+        }).catch(error => {
+            console.error('Erreur lors de la récupération des cartes:', error);
             res.status(500).json({ error: 'Erreur lors de la récupération des cartes' });
-        }
+        });
     },
-    async create(req, res) {
-        try {
-            const { content, listId, position, color } = req.body;
-            const newCard = await Card.create({
-                content,
-                position,
-                color,
-                listId
-            });
-            res.status(201).json(newCard);
-        } catch (error) {
-            res.status(500).json({ error: 'Erreur lors de la création de la carte' });
+
+    async show(req, res) {
+        const cardId = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(cardId)) {
+            return res.status(404).json({ message: 'Carte non trouvée' });
         }
-    },
-    async getById(req, res) {
-        try {
-            const { id } = req.params;
-            const card = await Card.findByPk(id);
+
+        Card.findByPk(cardId, {
+            include: 'tags'
+        }).then(card => {
             if (card) {
-                res.status(200).json(card);
+                res.json(card);
             } else {
-                res.status(404).json({ error: 'Carte non trouvée' });
+                res.status(404).json({ message: 'Carte non trouvée' });
             }
-        } catch (error) {
+        }).catch(error => {
             console.error('Erreur lors de la récupération de la carte:', error);
             res.status(500).json({ error: 'Erreur lors de la récupération de la carte' });
-        }
+        });
     },
+
+    async store(req, res) {
+        const { content, listId, position, color } = req.body;
+        if (!content || typeof content !== 'string' || !Number.isInteger(listId)) {
+            return res.status(400).json({ error: 'Données invalides' });
+        }
+
+        Card.create({ content, listId, position, color }).then(newCard => {
+            res.status(201).json(newCard);
+        }).catch(error => {
+            console.error('Erreur lors de la création de la carte:', error);
+            res.status(500).json({ error: 'Erreur lors de la création de la carte' });
+        });
+    },
+
     async update(req, res) {
-        try {
-            const { id } = req.params;
-            const { content, position, color, listId } = req.body;
-            const [updated] = await Card.update({ content, position, color, listId }, { where: { id } });
-            if (updated) {
-                const updatedCard = Card.findByPk(id);
-                res.status(200).json(updatedCard);
-            } else {
-                res.status(404).json({ error: 'Carte non trouvée' });
+        const cardId = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(cardId)) {
+            return res.status(404).json({ message: 'Carte non trouvée' });
+        }
+
+        Card.findByPk(cardId).then(cardToUpdate => {
+            if (!cardToUpdate) {
+                return res.status(404).json({ message: 'Carte non trouvée' });
             }
+
+            const { content, position, color } = req.body;
+            return cardToUpdate.update({ content, position, color });
+        }).then(updatedCard => {
+            res.json(updatedCard);
+        }).catch(error => {
+            console.error('Erreur lors de la mise à jour de la carte:', error);
+            res.status(500).json({ error: 'Erreur lors de la mise à jour de la carte' });
+        });
+    },
+
+    async destroy(req, res) {
+        const cardId = Number.parseInt(req.params.id, 10);
+        if (!Number.isInteger(cardId)) {
+            return res.status(404).json({ message: 'Carte non trouvée' });
+        }
+
+        Card.findByPk(cardId).then(cardToDelete => {
+            if (!cardToDelete) {
+                return res.status(404).json({ message: 'Carte non trouvée' });
+            }
+            return cardToDelete.destroy();
+        }).then(() => {
+            res.json({ message: 'La carte a été supprimée' });
+        }).catch(error => {
+            console.error('Erreur lors de la suppression de la carte:', error);
+            res.status(500).json({ error: 'Erreur lors de la suppression de la carte' });
+        });
+    },
+    async showTagWithCard(req, res) {
+        const { id, tag_id } = req.params;
+        try {
+            const card = await Card.findByPk(id);
+            if (!card) {
+                return res.status(404).json({ message: 'Carte non trouvée' });
+            }
+            const tag = await Tag.findByPk(tag_id);
+            if (!tag) {
+                return res.status(404).json({ message: 'Tag non trouvé' });
+            }
+            await card.addTag(tag);
+            res.status(200).json({ message: 'Tag associé à la carte avec succès' });
         } catch (error) {
-            res.status(500).json({ error: 'Erreur lors de la mise à jour de la carte ' });
+            console.error('Erreur lors de l\'association du tag à la carte:', error);
+            res.status(500).json({ error: 'Erreur serveur' });
         }
     },
-    async delete(req, res) {
+    async destroyTagFromCard(req, res) {
+        const { card_id, tag_id } = req.params;
         try {
-            const { id } = req.params;
-            const deleted = await Card.destroy({ where: { id } });
-            if (deleted) {
-                res.status(200).json({ message: 'Carte supprimée' });
-            } else {
-                res.status(404).json({ error: 'Carte non trouvée' });
+            const card = await Card.findByPk(card_id);
+            if (!card) {
+                return res.status(404).json({ message: 'Carte non trouvée' });
             }
+            const tag = await Tag.findByPk(tag_id);
+            if (!tag) {
+                return res.status(404).json({ message: 'Tag non trouvé' });
+            }
+            await card.removeTag(tag);
+            res.status(200).json({ message: 'Association entre la carte et le tag supprimée avec succès' });
         } catch (error) {
-            res.status(500).json({ error: 'Erreur lors de la suppression de la  carte' });
+            console.error('Erreur lors de la suppression de l\'association entre le tag et la carte:', error);
+            res.status(500).json({ error: 'Erreur serveur' });
         }
-    }
+    },
 };
+
+
 
 export { cardController };

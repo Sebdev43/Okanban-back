@@ -1,12 +1,7 @@
-import { List } from '../models/index.js';
-
 const mainController = {
     async index(req, res) {
-        const lists = await List.findAll({
-            include: 'cards',
-        });
-
-        res.json(lists);
+        // res.status(301);
+        res.status(301).redirect('/lists');
     },
 };
 

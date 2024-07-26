@@ -1,8 +1,10 @@
+// Par rapport à require avec dotenv : avec ESN on n'a qu'une ligne à écrire
 import 'dotenv/config';
 import express from 'express';
 const app = express();
 
-import { router } from './src/routers/router.js';
+// Quandn on utilise ESM, on doit préciser l'extension de fichier
+import { router } from './src/routers/index.js';
 
 // * ce middleware sert à interpréter du json que l'on reçoit par req.body
 app.use(express.json());
