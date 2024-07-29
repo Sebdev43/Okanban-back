@@ -1,173 +1,165 @@
-import { Card, Tag } from '../models/index.js';
+import { Card } from '../models/card.js';
+import { List } from '../models/list.js';
 
 /**
- * Card controller.
+ * Card controller to handle card operations.
  */
 const cardController = {
-    /**
-     * Fetches all cards from a specific list.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
-    async indexFromList(req, res) {
-        const listId = Number.parseInt(req.params.id, 10);
-        if (!Number.isInteger(listId)) {
-            return res.status(404).json({ message: 'Liste non trouvée' });
-        }
-        Card.findAll({
-            where: { listId },
-            include: 'tags'
-        }).then(cards => {
-            res.json(cards);
-        }).catch(error => {
-            console.error('Erreur lors de la récupération des cartes:', error);
-            res.status(500).json({ error: 'Erreur lors de la récupération des cartes' });
-        });
-    },
+  /**
+   * Get all cards for the authenticated user in a specific list.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   */
+  async indexFromList(req, res) {
+    const { id } = req.params;
+
+    try {
+      const list = await List.findOne({ where: { id, user_id: req.session.userId } });
+      if (!list) {
+        return res.status(404).json({ message: 'List not found' });
+      }
+
+      const cards = await Card.findAll({ where: { list_id: id, user_id: req.session.userId } });
+      res.status(200).json(cards);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching cards', error });
+    }
+  },
+
+  /**
+   * Get a specific card by ID for the authenticated user.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   */
+  async show(req, res) {
+    const { id } = req.params;
+
+    try {
+      const card = await Card.findOne({ where: { id, user_id: req.session.userId } });
+      if (!card) {
+        return res.status(404).json({ message: 'Card not found' });
+      }
+      res.status(200).json(card);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching card', error });
+    }
+  },
+  /**
+   * Create a new card for the authenticated user.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   */
+  async store(req, res) {
+    const { content, position, color, list_id } = req.body;
+
+    if (!content || !list_id) {
+      return res.status(400).json({ message: 'Content and list ID are required' });
+    }
+
+    try {
+      const list = await List.findOne({ where: { id: list_id, user_id: req.session.userId } });
+      if (!list) {
+        return res.status(404).json({ message: 'List not found' });
+      }
+
+      const newCard = await Card.create({ content, position, color, list_id, user_id: req.session.userId });
+      res.status(201).json(newCard);
+    } catch (error) {
+      res.status(500).json({ message: 'Error creating card', error });
+    }
+  },
+  /**
+   * Update a specific card by ID for the authenticated user.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   */
+  async update(req, res) {
+    const { id } = req.params;
+    const { content, position, color } = req.body;
+
+    try {
+      const card = await Card.findOne({ where: { id, user_id: req.session.userId } });
+      if (!card) {
+        return res.status(404).json({ message: 'Card not found' });
+      }
+
+      if (content) card.content = content;
+      if (position) card.position = position;
+      if (color) card.color = color;
+
+      await card.save();
+      res.status(200).json({ message: 'Card updated successfully', card });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating card', error });
+    }
+  },
+
+  /**
+   * Delete a specific card by ID for the authenticated user.
+   * @param {Object} req - Express request object.
+   * @param {Object} res - Express response object.
+   */
+  async destroy(req, res) {
+    const { id } = req.params;
+
+    try {
+      const card = await Card.findOne({ where: { id, user_id: req.session.userId } });
+      if (!card) {
+        return res.status(404).json({ message: 'Card not found' });
+      }
+
+      await card.destroy();
+      res.status(200).json({ message: 'Card deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting card', error });
+    }
+  },
+  /**
+   * Fetches a specific card by ID for the authenticated user, including its associated tags.
+   * @param {Object} req - Express request object.
+   * @param {Object} req.params - Route parameters.
+   * @param {number} req.params.id - Card ID.
+   * @param {Object} res - Express response object.
+   */
+  async showTagWithCard(req, res) {
+    const { id } = req.params;
+    try {
+      const card = await Card.findOne({ where: { id, user_id: req.session.userId }, include: [Tag] });
+      if (!card) {
+        return res.status(404).json({ message: 'Card not found' });
+      }
+      res.status(200).json(card);
+    } catch (error) {
+      res.status(500).json({ message: 'Error fetching card with tags', error });
+    }
+  },
 
     /**
-     * Fetches a specific card by ID.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
-    async show(req, res) {
-        const cardId = Number.parseInt(req.params.id, 10);
-        if (!Number.isInteger(cardId)) {
-            return res.status(404).json({ message: 'Carte non trouvée' });
-        }
-        Card.findByPk(cardId, {
-            include: 'tags'
-        }).then(card => {
-            if (card) {
-                res.json(card);
-            } else {
-                res.status(404).json({ message: 'Carte non trouvée' });
-            }
-        }).catch(error => {
-            console.error('Erreur lors de la récupération de la carte:', error);
-            res.status(500).json({ error: 'Erreur lors de la récupération de la carte' });
-        });
-    },
-
-    /**
-     * Creates a new card.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
-    async store(req, res) {
-        const { content, listId, position, color } = req.body;
-        if (!content || typeof content !== 'string' || !Number.isInteger(listId)) {
-            return res.status(400).json({ error: 'Données invalides' });
-        }
-        Card.create({ content, listId, position, color }).then(newCard => {
-            res.status(201).json(newCard);
-        }).catch(error => {
-            console.error('Erreur lors de la création de la carte:', error);
-            res.status(500).json({ error: 'Erreur lors de la création de la carte' });
-        });
-    },
-
-    /**
-     * Updates an existing card.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
-    async update(req, res) {
-        const cardId = Number.parseInt(req.params.id, 10);
-        if (!Number.isInteger(cardId)) {
-            return res.status(404).json({ message: 'Carte non trouvée' });
-        }
-        Card.findByPk(cardId).then(cardToUpdate => {
-            if (!cardToUpdate) {
-                return res.status(404).json({ message: 'Carte non trouvée' });
-            }
-            const { content, position, color } = req.body;
-            return cardToUpdate.update({ content, position, color });
-        }).then(updatedCard => {
-            res.json(updatedCard);
-        }).catch(error => {
-            console.error('Erreur lors de la mise à jour de la carte:', error);
-            res.status(500).json({ error: 'Erreur lors de la mise à jour de la carte' });
-        });
-    },
-
-    /**
-     * Deletes a card.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
-    async destroy(req, res) {
-        const cardId = Number.parseInt(req.params.id, 10);
-        if (!Number.isInteger(cardId)) {
-            return res.status(404).json({ message: 'Carte non trouvée' });
-        }
-        Card.findByPk(cardId).then(cardToDelete => {
-            if (!cardToDelete) {
-                return res.status(404).json({ message: 'Carte non trouvée' });
-            }
-            return cardToDelete.destroy();
-        }).then(() => {
-            res.json({ message: 'La carte a été supprimée' });
-        }).catch(error => {
-            console.error('Erreur lors de la suppression de la carte:', error);
-            res.status(500).json({ error: 'Erreur lors de la suppression de la carte' });
-        });
-    },
-
-    /**
-     * Associates a tag with a card.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
-    async showTagWithCard(req, res) {
-        const { id, tag_id } = req.params;
-        try {
-            const card = await Card.findByPk(id);
-            if (!card) {
-                return res.status(404).json({ message: 'Carte non trouvée' });
-            }
-            const tag = await Tag.findByPk(tag_id);
-            if (!tag) {
-                return res.status(404).json({ message: 'Tag non trouvé' });
-            }
-            await card.addTag(tag);
-            res.status(200).json({ message: 'Tag associé à la carte avec succès' });
-        } catch (error) {
-            console.error('Erreur lors de l\'association du tag à la carte:', error);
-            res.status(500).json({ error: 'Erreur serveur' });
-        }
-    },
-
-    /**
-     * Removes an association between a tag and a card.
-     * 
-     * @param {Object} req - Express request object.
-     * @param {Object} res - Express response object.
-     */
+   * Removes an association between a tag and a specific card by IDs for the authenticated user.
+   * @param {Object} req - Express request object.
+   * @param {Object} req.params - Route parameters.
+   * @param {number} req.params.card_id - Card ID.
+   * @param {number} req.params.tag_id - Tag ID.
+   * @param {Object} res - Express response object.
+   */
     async destroyTagFromCard(req, res) {
         const { card_id, tag_id } = req.params;
+    
         try {
-            const card = await Card.findByPk(card_id);
-            if (!card) {
-                return res.status(404).json({ message: 'Carte non trouvée' });
-            }
-            const tag = await Tag.findByPk(tag_id);
-            if (!tag) {
-                return res.status(404).json({ message: 'Tag non trouvé' });
-            }
-            await card.removeTag(tag);
-            res.status(200).json({ message: 'Association entre la carte et le tag supprimée avec succès' });
+          const cardHasTag = await CardHasTag.findOne({ where: { card_id, tag_id } });
+    
+          if (!cardHasTag) {
+            return res.status(404).json({ message: 'Association not found' });
+          }
+    
+          await cardHasTag.destroy();
+          res.status(200).json({ message: 'Association removed successfully' });
         } catch (error) {
-            console.error('Erreur lors de la suppression de l\'association entre le tag et la carte:', error);
-            res.status(500).json({ error: 'Erreur serveur' });
+          res.status(500).json({ message: 'Error removing association', error });
         }
-    },
+      },
+  
+
 };
 
 export { cardController };

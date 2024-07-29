@@ -4,6 +4,8 @@ import { mainController } from '../controllers/mainController.js';
 import { listController } from '../controllers/listController.js';
 import { cardController } from '../controllers/cardController.js';
 import { tagController } from '../controllers/tagController.js';
+import { authController } from '../controllers/authController.js';
+import { isAuthenticated } from '../middlewares/auth.js';
 import { isNumberMiddleware } from '../middlewares/validators.js';
 
 /**
@@ -18,7 +20,7 @@ import { isNumberMiddleware } from '../middlewares/validators.js';
  * @memberof module:router~router
  * @inner
  */
-router.get('/', mainController.index);
+router.get('/', isAuthenticated, mainController.index);
 
 /**
  * Route serving list of lists.
@@ -27,7 +29,7 @@ router.get('/', mainController.index);
  * @memberof module:router~router
  * @inner
  */
-router.get('/lists', listController.index);
+router.get('/lists', isAuthenticated, listController.index);
 
 /**
  * Route serving a specific list by ID.
@@ -36,7 +38,7 @@ router.get('/lists', listController.index);
  * @memberof module:router~router
  * @inner
  */
-router.get('/lists/:id', isNumberMiddleware, listController.show);
+router.get('/lists/:id', isAuthenticated, isNumberMiddleware, listController.show);
 
 /**
  * Route to create a new list.
@@ -45,7 +47,7 @@ router.get('/lists/:id', isNumberMiddleware, listController.show);
  * @memberof module:router~router
  * @inner
  */
-router.post('/lists', listController.store);
+router.post('/lists', isAuthenticated, listController.store);
 
 /**
  * Route to update a specific list by ID.
@@ -54,7 +56,7 @@ router.post('/lists', listController.store);
  * @memberof module:router~router
  * @inner
  */
-router.patch('/lists/:id', isNumberMiddleware, listController.update);
+router.patch('/lists/:id', isAuthenticated, isNumberMiddleware, listController.update);
 
 /**
  * Route to delete a specific list by ID.
@@ -63,7 +65,7 @@ router.patch('/lists/:id', isNumberMiddleware, listController.update);
  * @memberof module:router~router
  * @inner
  */
-router.delete('/lists/:id', isNumberMiddleware, listController.destroy);
+router.delete('/lists/:id', isAuthenticated, isNumberMiddleware, listController.destroy);
 
 /**
  * Route to get all cards from a specific list.
@@ -72,7 +74,7 @@ router.delete('/lists/:id', isNumberMiddleware, listController.destroy);
  * @memberof module:router~router
  * @inner
  */
-router.get('/lists/:id/cards', cardController.indexFromList);
+router.get('/lists/:id/cards', isAuthenticated, cardController.indexFromList);
 
 /**
  * Route serving a specific card by ID.
@@ -81,7 +83,7 @@ router.get('/lists/:id/cards', cardController.indexFromList);
  * @memberof module:router~router
  * @inner
  */
-router.get('/cards/:id', cardController.show);
+router.get('/cards/:id', isAuthenticated, cardController.show);
 
 /**
  * Route to create a new card.
@@ -90,7 +92,7 @@ router.get('/cards/:id', cardController.show);
  * @memberof module:router~router
  * @inner
  */
-router.post('/cards', cardController.store);
+router.post('/cards', isAuthenticated, cardController.store);
 
 /**
  * Route to update a specific card by ID.
@@ -99,7 +101,7 @@ router.post('/cards', cardController.store);
  * @memberof module:router~router
  * @inner
  */
-router.patch('/cards/:id', cardController.update);
+router.patch('/cards/:id', isAuthenticated, cardController.update);
 
 /**
  * Route to delete a specific card by ID.
@@ -108,7 +110,7 @@ router.patch('/cards/:id', cardController.update);
  * @memberof module:router~router
  * @inner
  */
-router.delete('/cards/:id', cardController.destroy);
+router.delete('/cards/:id', isAuthenticated, cardController.destroy);
 
 /**
  * Route serving list of tags.
@@ -117,7 +119,7 @@ router.delete('/cards/:id', cardController.destroy);
  * @memberof module:router~router
  * @inner
  */
-router.get('/tags', tagController.index);
+router.get('/tags', isAuthenticated, tagController.index);
 
 /**
  * Route to create a new tag.
@@ -126,7 +128,7 @@ router.get('/tags', tagController.index);
  * @memberof module:router~router
  * @inner
  */
-router.post('/tags', tagController.store);
+router.post('/tags', isAuthenticated, tagController.store);
 
 /**
  * Route to update a specific tag by ID.
@@ -135,7 +137,7 @@ router.post('/tags', tagController.store);
  * @memberof module:router~router
  * @inner
  */
-router.patch('/tags/:id', tagController.update);
+router.patch('/tags/:id', isAuthenticated, tagController.update);
 
 /**
  * Route to delete a specific tag by ID.
@@ -144,7 +146,7 @@ router.patch('/tags/:id', tagController.update);
  * @memberof module:router~router
  * @inner
  */
-router.delete('/tags/:id', tagController.destroy);
+router.delete('/tags/:id', isAuthenticated, tagController.destroy);
 
 /**
  * Route to associate a tag with a specific card by ID.
@@ -153,7 +155,7 @@ router.delete('/tags/:id', tagController.destroy);
  * @memberof module:router~router
  * @inner
  */
-router.post('/cards/:id/tag', cardController.showTagWithCard);
+router.post('/cards/:id/tag', isAuthenticated, cardController.showTagWithCard);
 
 /**
  * Route to remove an association between a tag and a specific card by IDs.
@@ -162,6 +164,50 @@ router.post('/cards/:id/tag', cardController.showTagWithCard);
  * @memberof module:router~router
  * @inner
  */
-router.delete('/cards/:card_id/tag/:tag_id', cardController.destroyTagFromCard);
+router.delete('/cards/:card_id/tag/:tag_id', isAuthenticated, cardController.destroyTagFromCard);
+
+/**
+ * Route serving user registration.
+ * @name post/register
+ * @function
+ * @memberof module:router~router
+ * @inner
+ * @param {string} path - Express path.
+ * @param {callback} middleware - Express middleware.
+ */
+router.post('/register', authController.register);
+
+/**
+ * Route serving user login.
+ * @name post/login
+ * @function
+ * @memberof module:router~router
+ * @inner
+ * @param {string} path - Express path.
+ * @param {callback} middleware - Express middleware.
+ */
+router.post('/login', authController.login);
+
+/**
+ * Route updating user information.
+ * @name patch/users/:id
+ * @function
+ * @memberof module:router~router
+ * @inner
+ * @param {string} path - Express path.
+ * @param {callback} middleware - Express middleware.
+ */
+router.patch('/users/:id', isAuthenticated, isNumberMiddleware, authController.update);
+
+/**
+ * Route deleting a user.
+ * @name delete/users/:id
+ * @function
+ * @memberof module:router~router
+ * @inner
+ * @param {string} path - Express path.
+ * @param {callback} middleware - Express middleware.
+ */
+router.delete('/users/:id', isAuthenticated, isNumberMiddleware, authController.delete);
 
 export { router };
