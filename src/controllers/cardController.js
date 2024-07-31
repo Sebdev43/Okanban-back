@@ -1,5 +1,7 @@
-import { Card } from '../models/card.js';
-import { List } from '../models/list.js';
+import { Card } from '../models/index.js';
+import { List } from '../models/index.js';
+import { Tag } from '../models/index.js';
+import { CardHasTag } from '../models/index.js';
 
 /**
  * Card controller to handle card operations.
@@ -19,9 +21,17 @@ const cardController = {
         return res.status(404).json({ message: 'List not found' });
       }
 
-      const cards = await Card.findAll({ where: { list_id: id, user_id: req.session.userId } });
+      const cards = await Card.findAll({ 
+        where: { list_id: id, user_id: req.session.userId },
+        include: [{
+          model: Tag,
+          as: 'tags',
+          through: { attributes: [] } // Pour obtenir uniquement les tags sans les attributs de la table pivot
+        }]
+      });
       res.status(200).json(cards);
     } catch (error) {
+      console.error('Error fetching cards:', error);
       res.status(500).json({ message: 'Error fetching cards', error });
     }
   },
@@ -35,7 +45,14 @@ const cardController = {
     const { id } = req.params;
 
     try {
-      const card = await Card.findOne({ where: { id, user_id: req.session.userId } });
+      const card = await Card.findOne({ 
+        where: { id, user_id: req.session.userId },
+        include: [{
+          model: Tag,
+          as: 'tags',
+          through: { attributes: [] } // Pour obtenir uniquement les tags sans les attributs de la table pivot
+        }]
+      });
       if (!card) {
         return res.status(404).json({ message: 'Card not found' });
       }
@@ -50,24 +67,50 @@ const cardController = {
    * @param {Object} res - Express response object.
    */
   async store(req, res) {
-    const { content, position, color, list_id } = req.body;
+    const { content, position, color, list_id, selectedTag } = req.body;
 
     if (!content || !list_id) {
-      return res.status(400).json({ message: 'Content and list ID are required' });
+        return res.status(400).json({ message: 'Content and list ID are required' });
     }
 
     try {
-      const list = await List.findOne({ where: { id: list_id, user_id: req.session.userId } });
-      if (!list) {
-        return res.status(404).json({ message: 'List not found' });
-      }
+        const list = await List.findOne({ where: { id: list_id, user_id: req.session.userId } });
+        if (!list) {
+            return res.status(404).json({ message: 'List not found' });
+        }
 
-      const newCard = await Card.create({ content, position, color, list_id, user_id: req.session.userId });
-      res.status(201).json(newCard);
+        const newCard = await Card.create({ content, position, color, list_id, user_id: req.session.userId });
+        console.log('New card created:', newCard);
+
+        if (selectedTag) {
+            const tag = await Tag.findOne({ where: { id: selectedTag, user_id: req.session.userId } });
+            if (tag) {
+                console.log('Tag found:', tag);
+                const cardHasTag = await CardHasTag.create({ card_id: newCard.id, tag_id: tag.id });
+                console.log('Tag associated with card:', cardHasTag);
+
+                // Vérification de l'association après l'ajout
+                const cardWithTag = await Card.findOne({
+                    where: { id: newCard.id, user_id: req.session.userId },
+                    include: [{
+                        model: Tag,
+                        as: 'tags',
+                        through: { attributes: [] }
+                    }]
+                });
+                console.log('Card with associated tag:', cardWithTag);
+            } else {
+                console.log('Tag not found for id:', selectedTag);
+            }
+        }
+
+        res.status(201).json(newCard);
     } catch (error) {
-      res.status(500).json({ message: 'Error creating card', error });
+        console.error('Error creating card:', error);
+        res.status(500).json({ message: 'Error creating card', error });
     }
-  },
+},
+
   /**
    * Update a specific card by ID for the authenticated user.
    * @param {Object} req - Express request object.
@@ -75,7 +118,7 @@ const cardController = {
    */
   async update(req, res) {
     const { id } = req.params;
-    const { content, position, color } = req.body;
+    const { content, position, color, selectedTag } = req.body;
 
     try {
       const card = await Card.findOne({ where: { id, user_id: req.session.userId } });
@@ -88,6 +131,14 @@ const cardController = {
       if (color) card.color = color;
 
       await card.save();
+
+      if (selectedTag) {
+        const tag = await Tag.findOne({ where: { id: selectedTag, user_id: req.session.userId } });
+        if (tag) {
+          await card.setTags([tag]);
+        }
+      }
+
       res.status(200).json({ message: 'Card updated successfully', card });
     } catch (error) {
       res.status(500).json({ message: 'Error updating card', error });
@@ -124,7 +175,14 @@ const cardController = {
   async showTagWithCard(req, res) {
     const { id } = req.params;
     try {
-      const card = await Card.findOne({ where: { id, user_id: req.session.userId }, include: [Tag] });
+      const card = await Card.findOne({ 
+        where: { id, user_id: req.session.userId }, 
+        include: [{
+          model: Tag,
+          as: 'tags',
+          through: { attributes: [] } // Pour obtenir uniquement les tags sans les attributs de la table pivot
+        }]
+      });
       if (!card) {
         return res.status(404).json({ message: 'Card not found' });
       }
@@ -155,11 +213,43 @@ const cardController = {
           await cardHasTag.destroy();
           res.status(200).json({ message: 'Association removed successfully' });
         } catch (error) {
-          res.status(500).json({ message: 'Error removing association', error });
+          res.status (500).json({ message: 'Error removing association', error });
         }
       },
-  
 
+      async reorder(req, res) {
+        const { cardId, fromListId, toListId, fromIndex, toIndex } = req.body;
+        try {
+          const card = await Card.findOne({ where: { id: cardId, user_id: req.session.userId } });
+    
+          if (card) {
+            card.list_id = toListId;
+            await card.save();
+    
+            const fromListCards = await Card.findAll({ where: { list_id: fromListId, user_id: req.session.userId }, order: [['position', 'ASC']] });
+            const toListCards = await Card.findAll({ where: { list_id: toListId, user_id: req.session.userId }, order: [['position', 'ASC']] });
+    
+            fromListCards.splice(fromIndex, 1);
+            toListCards.splice(toIndex, 0, card);
+    
+            for (let i = 0; i < fromListCards.length; i++) {
+              fromListCards[i].position = i;
+              await fromListCards[i].save();
+            }
+    
+            for (let i = 0; i < toListCards.length; i++) {
+              toListCards[i].position = i;
+              await toListCards[i].save();
+            }
+    
+            res.status(200).json({ message: 'Card positions updated successfully' });
+          } else {
+            res.status(404).json({ message: 'Card not found' });
+          }
+        } catch (error) {
+          res.status(500).json({ message: 'Error updating card positions', error });
+        }
+      },
 };
 
 export { cardController };

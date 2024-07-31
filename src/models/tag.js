@@ -1,12 +1,6 @@
 import { Model, DataTypes } from 'sequelize';
 import { getConnexion } from './sequelizeClient.js';
 
-/**
- * Tag model definition.
- * 
- * @extends Model
- */
-
 class Tag extends Model {}
 
 Tag.init(
@@ -16,11 +10,19 @@ Tag.init(
             allowNull: false,
             unique: true,
         },
-
         color: {
             type: DataTypes.TEXT,
             allowNull: false,
             defaultValue: '#FFFFFF',
+        },
+        user_id: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            references: {
+                model: 'user',
+                key: 'id',
+            },
+            onDelete: 'CASCADE',
         },
     },
     {

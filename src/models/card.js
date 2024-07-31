@@ -3,10 +3,6 @@ import { getConnexion } from './sequelizeClient.js';
 import { List } from './list.js';
 import { User } from './user.js';
 
-/**
- * Card model definition.
- * @extends Model
- */
 class Card extends Model {}
 
 Card.init(

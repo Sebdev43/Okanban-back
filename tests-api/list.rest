@@ -37,3 +37,29 @@ content-type: application/json
 
 DELETE http://localhost:3000/lists/8 HTTP/1.1
 content-type: application/json
+
+###
+# Test the /register endpoint
+
+POST http://localhost:5000/register
+Content-Type: application/json
+x-csrf-token: dVPhhoqk-JKD6cOMyBruP6t-6UZYrpF8vn7c
+
+{
+  "email": "testuser@example.com",
+  "password": "TestPassword123"
+}
+
+###
+# Get the CSRF token
+
+GET http://localhost:5000/token
+
+### Login Request
+POST http://localhost:5000/login
+Content-Type: application/json
+x-csrf-token: kOER3Fdc-P9N7CxLJTXRNEPTTYvFPyzTH2QE
+{
+    "email": "testuser@example.com",
+    "password": "TestPassword123"
+}

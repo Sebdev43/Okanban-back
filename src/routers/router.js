@@ -188,6 +188,7 @@ router.post('/register', authController.register);
  */
 router.post('/login', authController.login);
 
+router.get('/check-auth', authController.checkAuth);
 /**
  * Route updating user information.
  * @name patch/users/:id
@@ -209,5 +210,14 @@ router.patch('/users/:id', isAuthenticated, isNumberMiddleware, authController.u
  * @param {callback} middleware - Express middleware.
  */
 router.delete('/users/:id', isAuthenticated, isNumberMiddleware, authController.delete);
+
+
+router.post('/lists/reorder', isAuthenticated, listController.reorder);
+
+router.post('/cards/reorder', isAuthenticated, cardController.reorder);
+
+router.get('/token', (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+  });
 
 export { router };

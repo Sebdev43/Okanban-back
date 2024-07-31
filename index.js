@@ -3,6 +3,9 @@ import express from "express";
 import session from "express-session";
 import SequelizeStoreFactory from "connect-session-sequelize";
 import { Sequelize } from "sequelize";
+import cors from "cors";
+import csurf from "csurf";
+import cookieParser from "cookie-parser";
 import { router } from "./src/routers/router.js";
 
 const app = express();
@@ -16,11 +19,19 @@ const store = new SequelizeStore({
   expiration: 24 * 60 * 60 * 1000, // Durée de vie des sessions de 24 heures
 });
 
+const csrfProtection = csurf({ cookie: true });
 /**
  * Express application instance.
  * @type {Object}
  */
+app.use(cors({
+  origin: "http://localhost:5173", 
+  credentials: true, 
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
+}));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 app.use(
   session({
@@ -33,6 +44,17 @@ app.use(
 );
 
 store.sync();
+
+
+
+
+app.use(csrfProtection);
+
+app.use((err, req, res, next) => {
+  if (err.code !== 'EBADCSRFTOKEN') return next(err);
+  res.status(403).send('Invalid CSRF Token');
+});
+
 
 app.use(router);
 

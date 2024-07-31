@@ -1,6 +1,7 @@
 import { List } from './list.js';
 import { Card } from './card.js';
 import { Tag } from './tag.js';
+import { CardHasTag } from './card_has_tag.js';
 
 List.hasMany(Card, {
     as: 'cards',
@@ -27,4 +28,4 @@ Tag.belongsToMany(Card, {
     otherKey: 'card_id',
 });
 
-export { List, Card, Tag };
+export { List, Card, Tag, CardHasTag };

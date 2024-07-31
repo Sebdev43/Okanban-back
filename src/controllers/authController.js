@@ -12,21 +12,20 @@ const authController = {
    * @param {Object} req - Express request object.
    * @param {Object} req.body - Request body.
    * @param {string} req.body.email - User's email.
-   * @param {string} req.body.username - User's username.
    * @param {string} req.body.password - User's password.
    * @param {Object} res - Express response object.
    */
   async register(req, res) {
-    const { email, username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!email || !username || !password) {
+    if (!email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
     try {
       const hashedPassword = await bcrypt.hash(password, saltRounds);
-      const newUser = await User.create({ email, username, password: hashedPassword });
-      req.session.userId = newUser.id; // Save user ID in session
+      const newUser = await User.create({ email, password: hashedPassword });
+      req.session.userId = newUser.id; 
       res.status(201).json({ message: 'User created successfully', user: newUser });
     } catch (error) {
       res.status(500).json({ message: 'Error creating user', error });
@@ -53,7 +52,7 @@ const authController = {
       if (!user || !(await bcrypt.compare(password, user.password))) {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
-      req.session.userId = user.id; // Save user ID in session
+      req.session.userId = user.id; 
       res.status(200).json({ message: 'Login successful', user });
     } catch (error) {
       res.status(500).json({ message: 'Error logging in', error });
@@ -65,12 +64,11 @@ const authController = {
    * @param {Object} req - Express request object.
    * @param {Object} req.body - Request body.
    * @param {string} [req.body.email] - New email.
-   * @param {string} [req.body.username] - New username.
    * @param {string} [req.body.password] - New password.
    * @param {Object} res - Express response object.
    */
   async update(req, res) {
-    const { email, username, password } = req.body;
+    const { email, password } = req.body;
     const userId = req.session.userId; // Get user ID from session
 
     try {
@@ -80,7 +78,6 @@ const authController = {
       }
 
       if (email) user.email = email;
-      if (username) user.username = username;
       if (password) user.password = await bcrypt.hash(password, saltRounds);
 
       await user.save();
@@ -108,6 +105,13 @@ const authController = {
       res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
       res.status(500).json({ message: 'Error deleting user', error });
+    }
+  },
+  async checkAuth(req, res) {
+    if (req.session.userId) {
+      res.status(200).json({ authenticated: true });
+    } else {
+      res.status(401).json({ authenticated: false });
     }
   }
 };

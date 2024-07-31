@@ -1,4 +1,4 @@
-import { Tag, Card } from '../models/index.js';
+import { Tag } from '../models/index.js';
 
 /**
  * Tag controller.
@@ -12,6 +12,9 @@ const tagController = {
      */
     async index(req, res) {
         try {
+            if (!req.session.userId) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
             const tags = await Tag.findAll({ where: { user_id: req.session.userId } });
             res.json(tags);
         } catch (error) {

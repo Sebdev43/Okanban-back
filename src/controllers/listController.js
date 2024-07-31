@@ -1,4 +1,4 @@
-import { List } from '../models/list.js';
+import { List } from '../models/index.js';
 
 /**
  * List controller to handle list operations.
@@ -101,7 +101,26 @@ const listController = {
     } catch (error) {
       res.status(500).json({ message: 'Error deleting list', error });
     }
-  }
+  },
+
+  async reorder(req, res) {
+    const { fromIndex, toIndex } = req.body;
+    try {
+      const lists = await List.findAll({ where: { user_id: req.session.userId }, order: [['position', 'ASC']] });
+      const movedList = lists.splice(fromIndex, 1)[0];
+      lists.splice(toIndex, 0, movedList);
+
+      for (let i = 0; i < lists.length; i++) {
+        lists[i].position = i;
+        await lists[i].save();
+      }
+
+      res.status(200).json({ message: 'List positions updated successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating list positions', error });
+    }
+  },
+
 };
 
 export { listController };
