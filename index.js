@@ -39,7 +39,7 @@ app.use(
     store: store,
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false },
+    cookie: { secure: true },
   })
 );
 
