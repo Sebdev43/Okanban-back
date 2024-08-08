@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
-    "db:create-role": "psql -U postgres -c \"CREATE ROLE okanban WITH LOGIN PASSWORD '1gGxYVTCH%r1Kmn&5ec'\" || echo 'Role already exists'",
+    "db:create-role": "psql -U postgres -c \"CREATE ROLE okanban WITH LOGIN PASSWORD '1gGxYVTCHr1Kmn5ec'\" || echo 'Role already exists'",
     "db:create-db": "psql -U postgres -c \"CREATE DATABASE okanban OWNER okanban\"",
     "db:create": "npm run db:create-role && npm run db:create-db",
     "db:tables": "psql -U okanban -d okanban -f ./data/create_tables.sql",
