@@ -15,9 +15,6 @@ Card.init(
       type: DataTypes.INTEGER,
       defaultValue: 1,
     },
-    color: {
-      type: DataTypes.STRING,
-    },
     list_id: {
       type: DataTypes.INTEGER,
       allowNull: false,

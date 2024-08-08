@@ -67,7 +67,7 @@ const cardController = {
    * @param {Object} res - Express response object.
    */
   async store(req, res) {
-    const { content, position, color, list_id, selectedTag } = req.body;
+    const { content, position, list_id, selectedTag } = req.body;
 
     if (!content || !list_id) {
         return res.status(400).json({ message: 'Content and list ID are required' });
@@ -79,7 +79,7 @@ const cardController = {
             return res.status(404).json({ message: 'List not found' });
         }
 
-        const newCard = await Card.create({ content, position, color, list_id, user_id: req.session.userId });
+        const newCard = await Card.create({ content, position, list_id, user_id: req.session.userId });
         console.log('New card created:', newCard);
 
         if (selectedTag) {
@@ -118,7 +118,7 @@ const cardController = {
    */
   async update(req, res) {
     const { id } = req.params;
-    const { content, position, color, selectedTag } = req.body;
+    const { content, position, selectedTag } = req.body;
 
     try {
       const card = await Card.findOne({ where: { id, user_id: req.session.userId } });
@@ -128,7 +128,7 @@ const cardController = {
 
       if (content) card.content = content;
       if (position) card.position = position;
-      if (color) card.color = color;
+
 
       await card.save();
 
