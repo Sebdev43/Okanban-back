@@ -25,14 +25,23 @@ const csrfProtection = csurf({ cookie: true });
  * @type {Object}
  */
 app.use(cors({
-  origin: "http://localhost:5173", 
+  origin: ["http://localhost:5173",
+    "https://localhost:5173",
+    "http://localhost:4173",
+    "https://localhost:4173",
+    "http://localhost:5000",
+    "https://localhost:5000",
+    "https://okanban.icu",
+    "http://okanban.icu",
+    "https://www.okanban.icu",
+    "https://www.okanban.icu",], 
   credentials: true, 
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.set("trust proxy", 1);
 app.use(
   session({
     secret: "Le okanban c'est fanstatique !",

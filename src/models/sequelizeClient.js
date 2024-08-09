@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize';
-
+import "dotenv/config";
 /**
  * Get a new Sequelize connection instance.
  * 
